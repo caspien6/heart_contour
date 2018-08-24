@@ -16,6 +16,7 @@ class CleanRawData:
             structure: root - DCOMS - (patient folders with dcm files)
                             |
                             - CONS - (con files with the contours)
+        target - the folder to save the results
         protocol - the required images (current project uses sBTFE_BH SA 
                 but in case of necessaty it can be modified)
         '''
@@ -115,13 +116,13 @@ class CleanRawData:
     def __filter_con_newpath(self, old_path, name):
         tags = ['Study_id=', 'Series=']
         values = []
-        with open(old_path, 'rt', encoding='utf8') as f:
+        with open(old_path, 'rt', encoding='utf-8') as f:
             for line in f:
                 for tag in tags:
                     idx = line.rstrip('\n').find(tag)
                     if idx != -1:
                         idx += len(tag)
-                        values.append(line[idx:-1])
+                        values.append(line[idx:-1]) # the final part of the line is the value we are interested in
                 if len(values) == len(tags):
                     break
         
@@ -136,7 +137,7 @@ class CleanRawData:
            'Birth_date='
         ]
         
-        file_in = open(old_path, 'rt', encoding='utf8')
+        file_in = open(old_path, 'rt', encoding='utf-8')
         file_out = open(new_path, 'wt')
 
         for line in file_in:
@@ -159,8 +160,8 @@ class CleanRawData:
 
     # function to write progress bar
     def progress_bar(self, process, progress, path):
-        print("Current phase: %s, Progress: [%d%%] in Folder: %s ...\r"
-        % (process, int(progress*100.0), path), end='')
+        print("Current phase: %s, Progress: [%d%%] in Folder: %s ... \r"
+        % (process, int(progress*100.0), path.encode('utf-8')), end='')
 
 
 crd = CleanRawData("root", "target")
