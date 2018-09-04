@@ -33,7 +33,10 @@ class CleanRawData:
         '''
         dcms_per_threads = [0] * self.thread_num
         cons_per_threads = [0] * self.thread_num
-        new_roots = ['root' + str(i) for i in range(self.thread_num)]
+
+        base = self.root.split(os.sep)[-1]
+        new_roots = [self.root.replace(base, 'root' + str(i)) for i in range(self.thread_num)]
+
         for path, _, files in os.walk(self.root): # iterate over all the folders
 
             num_files = len(files)
@@ -142,6 +145,7 @@ class CleanRawData:
         ds.InstanceCreationDate = ""
         ds.AccessionNumber = ""
         ds.StudyID = ""
+        ds.PatientID = ""
 
         dicom.dcmwrite(old_path, ds)
 
@@ -186,20 +190,20 @@ class CleanRawData:
                 lock.release()
 
         tags = ['Study_id=', 'Series=']
-        values = []
+        values = {}
         with open(old_path, 'rt', encoding='utf-8') as f:
             for line in f:
                 for tag in tags:
                     idx = line.rstrip('\n').find(tag)
                     if idx != -1:
                         idx += len(tag)
-                        values.append(line[idx:-1]) # the final part of the line is the value we are interested in
+                        values[tag] = line[idx:-1] # the final part of the line is the value we are interested in
                 if len(values) == len(tags):
                     break
         
-        temp = os.path.join(self.target, values[0])
+        temp = os.path.join(self.target, values[tags[0]])
         create_folder(temp)
-        temp = os.path.join(temp, values[1])
+        temp = os.path.join(temp, values[tags[1]])
         create_folder(temp)
         return os.path.join(temp, 'contour.con')
 
@@ -209,7 +213,8 @@ class CleanRawData:
            'Patient_gender=',
            'Birth_date=',
            'Study_date=',
-           'Study_id='
+           'Study_id=',
+           'Patient_id='
         ]
         
         file_in = open(old_path, 'rt', encoding='utf-8')
@@ -238,11 +243,13 @@ class CleanRawData:
     # function to write progress bar
     def progress_bar(self, chunk, process, processed_files, num_files):
         if processed_files % (num_files // 20 + 1) == 0 or processed_files == num_files:
-           progress = int(processed_files / num_files * 100.0)
+           progress = int(processed_files / (num_files+1) * 100.0)
            print("Folder: %s, current phase: %s, Progress: [%d%%]" % (chunk, process, progress))
 
 if __name__ == '__main__':
-    crd = CleanRawData("root", "target", 3)
+    source = 'D:\\AI\\works\\Heart\\code\\heart_contour\\root'
+    target = 'D:\\AI\\works\\Heart\\code\\heart_contour\\target'
+    crd = CleanRawData(source, target, 3)
     crd.create_folder_chunks()
     print("Data were split up to parts. Start multiprocessing.")
     
