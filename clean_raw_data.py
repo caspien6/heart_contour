@@ -248,8 +248,8 @@ class CleanRawData:
 
 if __name__ == '__main__':
     source = 'D:\\AI\\works\\Heart\\code\\heart_contour\\root'
-    target = 'D:\\AI\\works\\Heart\\code\\heart_contour\\target'
-    crd = CleanRawData(source, target, 3)
+    target = 'E:\MLDATA\\SA_data\\SA_all'
+    crd = CleanRawData(source, target, 4)
     crd.create_folder_chunks()
     print("Data were split up to parts. Start multiprocessing.")
     
