@@ -31,8 +31,8 @@ def test_con_reader():
 
 
 def test_con2img():
-    dcm_path = "../data/Eredetikepek/1___AW1295938826.919.1531920932/2018-07-16_1.2.840.113619.2.181.60341967613.14520.1531920932966.2/"
-    con_path = "../data/Kontur/Horvath_Daniel_Konstantin_20180716_HV_SFI_SER1001_ACQ10.con"
+    dcm_path = "../../data/SA_all/17108976AMR804/1001/imgs/"
+    con_path = "../../data/SA_all/17108976AMR804/1001/contour.con"
 
     con2img.draw_contours2images(dcm_path, con_path)
     print("Done.")
