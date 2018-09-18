@@ -145,6 +145,8 @@ class CleanRawData:
         ds.InstanceCreationDate = ""
         ds.AccessionNumber = ""
         ds.StudyID = ""
+        ds.ScheduledProcedureStepID = ""
+        ds.RequestedProcedureID = ""
         ds.PatientID = ""
 
         dicom.dcmwrite(old_path, ds)

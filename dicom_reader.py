@@ -26,7 +26,7 @@ class DCMreader:
         frames = 0
         indices = []
         for idx, slice_loc in enumerate(slice_locations):
-            if slice_loc > current_sl:
+            if slice_loc != current_sl:
                 current_sl = slice_loc
                 self.num_slices += 1
                 self.num_frames = max(self.num_frames, frames)

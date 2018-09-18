@@ -4,7 +4,7 @@ from matplotlib.pyplot import imsave, show
 
 
 def draw_square(img, x, y, size=2):
-    img[x: x + size, y: y + size] = 255
+    img[x: x + size, y: y + size] = 1
 
 
 def draw_contours2images(dcm_folder, con_file):

@@ -31,8 +31,9 @@ def test_con_reader():
 
 
 def test_con2img():
-    dcm_path = "../../data/SA_all/17108976AMR804/1001/imgs/"
-    con_path = "../../data/SA_all/17108976AMR804/1001/contour.con"
+    base_path = "../../data/SA_all_2/19194862AMR806/1401/"
+    dcm_path = base_path + "imgs/"
+    con_path = base_path + "contour.con"
 
     con2img.draw_contours2images(dcm_path, con_path)
     print("Done.")
