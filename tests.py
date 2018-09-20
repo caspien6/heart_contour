@@ -1,6 +1,7 @@
 import dicom_reader
 import con_reader
 import con2img
+import volume as vol
 from matplotlib.pyplot import plot, imshow, show
 
 
@@ -39,7 +40,7 @@ def test_con_volumedata():
     assert width == 8.0, 'Wrong sice width!'
     print('OK: test_con_volumedata')
 
-test_con_volumedata()
+#test_con_volumedata()
 
 def test_con2img():
     #base_path = "../../data/SA_all_2/19194862AMR806/1401/"
@@ -51,3 +52,14 @@ def test_con2img():
     print("OK: test_con2img")
 
 #test_con2img()
+
+def test_volume():
+    path = "../../data/volume_test/Takacs_Akos_20180131_038318067_STD19194862AMR806_SER1401_ACQ14.con"
+    v = vol.Volume(path)
+    v.calculate_volumes()
+    print(v.lved)
+    print(v.lves)
+    print(v.rved)
+    print(v.rves)
+
+test_volume()
