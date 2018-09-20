@@ -29,13 +29,25 @@ def test_con_reader():
 
 #test_con_reader()
 
+def test_con_volumedata():
+    base_path = "../../data/SA_all_2/19307824AMR806/1301/"
+    con_path = base_path + "contour.con"
+    cn = con_reader.CONreader(con_path)
+    fw, reso, width = cn.get_volume_data()
+    assert fw[0] == 329.999996 and fw[1] == 329.999996, 'Wrong field view!'
+    assert reso[0] == 224 and reso[1] == 224, 'Wrong image resolution!'
+    assert width == 8.0, 'Wrong sice width!'
+    print('OK: test_con_volumedata')
+
+test_con_volumedata()
 
 def test_con2img():
-    base_path = "../../data/SA_all_2/19194862AMR806/1401/"
+    #base_path = "../../data/SA_all_2/19194862AMR806/1401/"
+    base_path = "../../data/SA_all_2/19307824AMR806/1301/"
     dcm_path = base_path + "imgs/"
     con_path = base_path + "contour.con"
 
     con2img.draw_contours2images(dcm_path, con_path)
-    print("Done.")
+    print("OK: test_con2img")
 
-test_con2img()
+#test_con2img()

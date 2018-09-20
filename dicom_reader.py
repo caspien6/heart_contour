@@ -37,6 +37,7 @@ class DCMreader:
 
         size_h, size_w = images[0].shape
         self.dcm_images = np.ones((self.num_slices, self.num_frames, size_h, size_w))
+        self.dcm_slicelocations = np.ones((self.num_slices, self.num_frames, 1))
 
         for i in range(len(indices) - 1):
 
@@ -44,13 +45,18 @@ class DCMreader:
                 slice_idx = i
                 frame_idx = idx - indices[i]
                 self.dcm_images[slice_idx, frame_idx, :, :] = images[idx]
+                self.dcm_slicelocations[slice_idx, frame_idx, 0] = slice_locations[idx]
 
         for idx in range(indices[-1], len(images)):
             slice_idx = len(indices) - 1
             frame_idx = idx - indices[-1]
             self.dcm_images[slice_idx, frame_idx, :, :] = images[idx]
+            self.dcm_slicelocations[slice_idx, frame_idx, 0] = slice_locations[idx]
 
         self.num_images = len(images)
 
     def get_image(self, slice, frame):
         return self.dcm_images[slice, frame, :, :]
+    
+    def get_slicelocation(self, slice, frame):
+        return self.dcm_slicelocations[slice, frame]

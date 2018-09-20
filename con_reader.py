@@ -13,19 +13,48 @@ class CONreader:
 
         con_tag = "XYCONTOUR"
         stop_tag = "POINT"
+        volumerelated_tags = [
+            'Field_of_view=',
+            'Image_resolution=',
+            'Slicethickness='
+        ]
+
+        self.volume_data = {
+            volumerelated_tags[0]: None, 
+            volumerelated_tags[1]: None, 
+            volumerelated_tags[2]: None
+        }
 
         con = open(file_name, 'r')
+        
+        def find_volumerelated_tags(line):
+            for tag in volumerelated_tags:
+                if line.find(tag) != -1:
+                    value = line.split(tag)[1] # the place of the tag will be an empty string, second part: value
+                    self.volume_data[tag] = value
+        
+        def mode2colornames(mode):
+            if mode == 0:
+                return 'red' # check the colors out
+            elif mode == 1:
+                return 'green'
+            elif mode == 5:
+                return 'yellow'
+            else:
+                raise NameError("Unknown mode: " + str(mode))
 
         def find_xycontour_tag():
             line = con.readline()
+            find_volumerelated_tags(line)
             while line.find(con_tag) == -1 and line.find(stop_tag) == -1:
                 line = con.readline()
+                find_volumerelated_tags(line)
             return line
 
-        def identify_slice_frame():
+        def identify_slice_frame_mode():
             line = con.readline()
             splitted = line.split(' ')
-            return int(splitted[0]), int(splitted[1])
+            return int(splitted[0]), int(splitted[1]), mode2colornames(int(splitted[2]))
 
         def number_of_contour_points():
             line = con.readline()
@@ -42,10 +71,10 @@ class CONreader:
         tag = find_xycontour_tag()
         while tag.find(stop_tag) == -1:
 
-            slice, frame = identify_slice_frame()
+            slice, frame, mode = identify_slice_frame_mode()
             num = number_of_contour_points()
             contour = read_contour_points(num)
-            self.container.append((slice, frame, contour))
+            self.container.append((slice, frame, mode, contour))
             tag = find_xycontour_tag()
 
         con.close()
@@ -60,7 +89,8 @@ class CONreader:
         for item in self.container:
             slice = item[0]
             frame = item[1]
-            contour = item[2]
+            mode = item[2]
+            contour = item[3]
 
             # rearrange the contour
             d = {'x': [], 'y': []}
@@ -72,8 +102,31 @@ class CONreader:
                 data[slice] = {}
 
             if not(frame in data[slice].keys()):
-                data[slice][frame] = []
+                data[slice][frame] = {}
 
-            data[slice][frame].append(d)
+            if not(mode in data[slice][frame].keys()):
+                data[slice][frame][mode] = []
+
+            data[slice][frame][mode].append(d)
 
         return data
+    
+    def get_volume_data(self):
+        # process field of view
+        fw_string = self.volume_data['Field_of_view=']
+        sizexsize_mm = fw_string.split('x') # variable name shows the format
+        size_h = float(sizexsize_mm[0])
+        size_w = float(sizexsize_mm[1].split(' mm')[0]) # I cut the _mm ending
+
+        # process image resolution
+        img_res_string = self.volume_data['Image_resolution=']
+        sizexsize = img_res_string.split('x')
+        res_h = float(sizexsize[0])
+        res_w = float(sizexsize[1])
+
+        # process slice thickness
+        width_string = self.volume_data['Slicethickness=']
+        width_mm = width_string.split(' mm')
+        width = float(width_mm[0])
+
+        return (size_h, size_w), (res_h, res_w), width
