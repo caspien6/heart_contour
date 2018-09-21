@@ -16,13 +16,17 @@ class CONreader:
         volumerelated_tags = [
             'Field_of_view=',
             'Image_resolution=',
-            'Slicethickness='
+            'Slicethickness=',
+            'Patient_weight=',
+            'Patient_height='
         ]
 
         self.volume_data = {
             volumerelated_tags[0]: None, 
             volumerelated_tags[1]: None, 
-            volumerelated_tags[2]: None
+            volumerelated_tags[2]: None,
+            volumerelated_tags[3]: None,
+            volumerelated_tags[4]: None
         }
 
         con = open(file_name, 'r')
@@ -129,4 +133,14 @@ class CONreader:
         width_mm = width_string.split(' mm')
         width = float(width_mm[0])
 
-        return (size_h, size_w), (res_h, res_w), width
+        # process weight
+        weight_string = self.volume_data['Patient_weight=']
+        weight_kg = weight_string.split(' kg')
+        weight = float(weight_kg[0])
+
+        # process height
+        height_string = self.volume_data['Patient_height=']
+        height_cm = height_string.split(' cm')
+        height = float(height_cm[0])
+
+        return (size_h, size_w), (res_h, res_w), width, weight, height

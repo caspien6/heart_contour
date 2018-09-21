@@ -18,9 +18,12 @@ class Volume:
         '''
         self.con_file = con_file
         self.cr = CONreader(self.con_file)
-        self.fview, self.img_res, self.slice_width = self.cr.get_volume_data()
+        self.fview, self.img_res, self.slice_width, self.weight, self.height = self.cr.get_volume_data()
         self.contours = self.cr.get_hierarchical_contours()
     
+    # ---------------------------------
+    # calculate area with pixels
+
     def _curve2npmtx(self, curve):
         '''
         curve: dictionary with x and y keys,
@@ -107,7 +110,7 @@ class Volume:
                         queue.append((y, x))
         return plane
 
-    def _calculate_area(self, curve):
+    def _calculate_area_pixel(self, curve):
         curve_mtx = self._curve2npmtx(curve)
         curve_closed = self._close_curve(curve_mtx)
         plane1 = self._bbox(curve_closed)
@@ -120,11 +123,50 @@ class Volume:
             plt.show()
         return float(area_in_pixels) * self.fview[0] / self.img_res[0] * self.fview[1] / self.img_res[1]
     
+    # ---------------------------------
+    # calculate area with triangulars
+
+    def _curve2npmtx_float(self, curve):
+        '''
+        curve: dictionary with x and y keys,
+               each key leads to a list with (x, y) tuples
+        '''
+        assert len(curve) == 1, 'Too much curves.'
+        curve_ = curve[0]
+        mtx = np.zeros((len(curve_['x']), 2), dtype=float)
+        mtx[:, 0] = np.array(curve_['x'], dtype=float)
+        mtx[:, 1] = np.array(curve_['y'], dtype=float)
+        return mtx
+
+    def __calculate_area_triangular(self, curve):
+        curve_mtx = self._curve2npmtx_float(curve)
+        ratio = self.fview[0] / self.img_res[0] * self.fview[1] / self.img_res[1]
+        
+        # calculate center of mass
+        crm = np.sum(curve_mtx, axis=0) / curve_mtx.shape[0]
+
+        # vector between crm and a point of the curve
+        r = curve_mtx - crm
+
+        # side vector
+        curve_mtx_shifted = np.ones_like(curve_mtx)
+        curve_mtx_shifted[0] = curve_mtx[-1]
+        curve_mtx_shifted[1:] = curve_mtx[0:-1]
+        dr = curve_mtx - curve_mtx_shifted
+
+        # vector product
+        rxdr = np.cross(r, dr)
+
+        # sum up the pieces of triangulars
+        area = np.abs(0.5 * np.sum(rxdr))
+
+        return area * ratio
+    
     def _caclulate_slice_volume(self, area_u, area_b):
         dV = self.slice_width * (area_u + math.sqrt(area_u * area_b) + area_b) / 3.0
         return dV
     
-    def _grouping(self):
+    def _grouping(self, calculate_area):
         contour_areas = {}
         slices = self.contours.keys()
         for slice in slices:
@@ -137,7 +179,7 @@ class Volume:
                     frames.append(frame)
                     if mode in self.contours[slice][frame].keys():
                         curve = self.contours[slice][frame][mode]
-                        areas.append(self._calculate_area(curve))
+                        areas.append(calculate_area(curve))
 
                 if len(areas) > 1:
                     contour_areas[slice][side]['diastole'] = max(areas)
@@ -156,8 +198,11 @@ class Volume:
                     contour_areas[slice][side]['systole'] = None
         return contour_areas
 
-    def calculate_volumes(self):
-        areas = self._grouping()
+    def calculate_volumes(self, variant='triangular'):
+        if variant == 'pixel':
+            areas = self._grouping(self._calculate_area_pixel)
+        elif variant == 'triangular':
+            areas = self._grouping(self.__calculate_area_triangular)
 
         def volume(side, state):
             slices = list(areas.keys())
@@ -169,14 +214,21 @@ class Volume:
                     V += self._caclulate_slice_volume(A1, A2)
             return V / 1000.0 # mm^3 -> ml conversion
 
-        self.lved = volume('left', 'diastole')
-        self.lves = volume('left', 'systole')
+        self.lved = volume('left', 'diastole')  # left ED
+        self.lves = volume('left', 'systole')   # left ES
         self.rved = volume('right', 'diastole')
         self.rves = volume('right', 'systole')
-
-
-
         
+        bsa = math.sqrt(self.height * self.weight/3600) # Mosteller BSA
 
+        # other metrics: left
+        self.lved_i = self.lved / bsa      # left ED-index
+        self.lves_i = self.lves / bsa      # left ES-index
+        self.lvsv = self.lved - self.lves  # left Stroke-volume
+        self.lvsv_i = self.lvsv / bsa      # left SV index
 
-
+        # other metrics: right
+        self.rved_i = self.rved / bsa      # right ED-index
+        self.rves_i = self.rves / bsa      # right ES-index
+        self.rvsv = self.rved - self.rves  # right Stroke-volume
+        self.rvsv_i = self.rvsv / bsa      # right SV index

@@ -56,10 +56,20 @@ def test_con2img():
 def test_volume():
     path = "../../data/volume_test/Takacs_Akos_20180131_038318067_STD19194862AMR806_SER1401_ACQ14.con"
     v = vol.Volume(path)
-    v.calculate_volumes()
+    v.calculate_volumes('pixel')
     print(v.lved)
+    print(v.lved_i)
     print(v.lves)
+    print(v.lves_i)
+    print(v.lvsv)
+    print(v.lvsv_i)
+
     print(v.rved)
+    print(v.rved_i)
     print(v.rves)
+    print(v.rves_i)
+    print(v.rvsv)
+    print(v.rvsv_i)
+
 
 test_volume()
