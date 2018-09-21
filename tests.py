@@ -34,7 +34,7 @@ def test_con_volumedata():
     base_path = "../../data/SA_all_2/19307824AMR806/1301/"
     con_path = base_path + "contour.con"
     cn = con_reader.CONreader(con_path)
-    fw, reso, width = cn.get_volume_data()
+    fw, reso, width, weight, height = cn.get_volume_data()
     assert fw[0] == 329.999996 and fw[1] == 329.999996, 'Wrong field view!'
     assert reso[0] == 224 and reso[1] == 224, 'Wrong image resolution!'
     assert width == 8.0, 'Wrong sice width!'
@@ -43,33 +43,41 @@ def test_con_volumedata():
 #test_con_volumedata()
 
 def test_con2img():
-    #base_path = "../../data/SA_all_2/19194862AMR806/1401/"
-    base_path = "../../data/SA_all_2/19307824AMR806/1301/"
+    base_path = "../../data/SA_all_2/19194862AMR806/1401/"
+    #base_path = "../../data/SA_all_2/19307824AMR806/1301/"
     dcm_path = base_path + "imgs/"
     con_path = base_path + "contour.con"
 
     con2img.draw_contours2images(dcm_path, con_path)
     print("OK: test_con2img")
 
-#test_con2img()
+test_con2img()
 
 def test_volume():
-    path = "../../data/volume_test/Takacs_Akos_20180131_038318067_STD19194862AMR806_SER1401_ACQ14.con"
-    v = vol.Volume(path)
+    path1 = "../../data/volume_test/Takacs_Akos_20180131_038318067_STD19194862AMR806_SER1401_ACQ14.con"
+    path2 = "../../data/SA_all/17352962AMR801/901/contour.con"
+    path4 = "../../data/SA_all/17577538AMR801/901/contour.con"
+    path5 = "../../data/SA_all/17651351AMR806/1301/contour.con"
+    path6 = "../../data/SA_all/17827245AMR809/1301/contour.con"
+
+    v = vol.Volume(path6)
     v.calculate_volumes('pixel')
-    print(v.lved)
-    print(v.lved_i)
-    print(v.lves)
-    print(v.lves_i)
-    print(v.lvsv)
-    print(v.lvsv_i)
+    print('---------------------------')
+    print('LEFT VEN.')
+    print('LVED: %.3f'%v.lved)
+    print('LVED-idx: %.3f'%v.lved_i)
+    print('LVES: %.3f'%v.lves)
+    print('LVES-idx: %.3f'%v.lves_i)
+    print('LVSV: %.3f'%v.lvsv)
+    print('LVSV-idx: %.3f'%v.lvsv_i)
+    
+    print('---------------------------')
+    print('RIGHT VEN.')
+    print('RVED: %.3f'%v.rved)
+    print('RVED-idx: %.3f'%v.rved_i)
+    print('RVES: %.3f'%v.rves)
+    print('RVES-idx: %.3f'%v.rves_i)
+    print('RVSV: %.3f'%v.rvsv)
+    print('RVSV-idx: %.3f'%v.rvsv_i)
 
-    print(v.rved)
-    print(v.rved_i)
-    print(v.rves)
-    print(v.rves_i)
-    print(v.rvsv)
-    print(v.rvsv_i)
-
-
-test_volume()
+#test_volume()

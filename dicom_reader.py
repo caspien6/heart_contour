@@ -24,15 +24,21 @@ class DCMreader:
 
         current_sl = -1
         frames = 0
+        increasing = False
         indices = []
         for idx, slice_loc in enumerate(slice_locations):
             if slice_loc != current_sl:
-                current_sl = slice_loc
                 self.num_slices += 1
                 self.num_frames = max(self.num_frames, frames)
                 frames = 0
                 indices.append(idx)
 
+                if slice_loc > current_sl:
+                    increasing = True
+                else:
+                    increasing = False
+                
+                current_sl = slice_loc
             frames += 1
 
         size_h, size_w = images[0].shape
@@ -42,7 +48,7 @@ class DCMreader:
         for i in range(len(indices) - 1):
 
             for idx in range(indices[i], indices[i+1]):
-                slice_idx = i
+                slice_idx = (i if increasing else (len(indices) - 1 - i))
                 frame_idx = idx - indices[i]
                 self.dcm_images[slice_idx, frame_idx, :, :] = images[idx]
                 self.dcm_slicelocations[slice_idx, frame_idx, 0] = slice_locations[idx]

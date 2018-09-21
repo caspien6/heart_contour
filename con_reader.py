@@ -45,7 +45,8 @@ class CONreader:
             elif mode == 5:
                 return 'yellow'
             else:
-                raise NameError("Unknown mode: " + str(mode))
+                print('Warning: Unknown mode.')
+                return 'other'
 
         def find_xycontour_tag():
             line = con.readline()

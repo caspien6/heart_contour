@@ -100,7 +100,7 @@ class Volume:
                     
                 is_on_plane = (x >= 0 and x < width)
                 is_on_plane = (is_on_plane and y >= 0 and y < height)
-                    
+                
                 if is_on_plane:
                     is_unknown = (plane[y, x] == 0)
                     # if the point is valid then append it to the list
