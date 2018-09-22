@@ -23,7 +23,7 @@ class RoiLearn:
         self.avgpool = nn.AvgPool2d(6)
         self.flatten = Flatten()
         self.full = nn.Linear(8100,1024)
-            
+          
     def build_model(self):
         self.model = nn.Sequential(self.conv1,
                             self.avgpool,
