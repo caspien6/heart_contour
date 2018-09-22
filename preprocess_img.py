@@ -21,37 +21,37 @@ def write_rectangle2file(dcm_folder, con_file, rectangle_file):
 
     if os.path.exists(rectangle_file):
         os.remove(rectangle_file)
-    
+        
     for slice in hierarchical.keys():
         for frame in hierarchical[slice].keys():
 
             img = dc.get_image(slice, frame)
-
-            # find min-max for rectangle
             xglobalmin = 20000
             xglobalmax = 0
             yglobalmin = 20000
             yglobalmax = 0
-            
-            for contour in hierarchical[slice][frame]:
-                x_vec = contour['x']
-                y_vec = contour['y']
+            for mode in hierarchical[slice][frame].keys():
+                # find min-max for rectangle
                 
-                min_x,min_y = 20000, 20000
-                max_x,max_y = 0 , 0
-                #find local min-max
-                for idx in range(len(x_vec)):
-                    
-                    if x_vec[idx] > max_x:
-                        max_x = x_vec[idx]
-                    if min_x > x_vec[idx]:
-                        min_x = x_vec[idx]
+                for contour in hierarchical[slice][frame][mode]:
+                    x_vec = contour['x']
+                    y_vec = contour['y']
 
-                    if y_vec[idx] > max_y:
-                        max_y = y_vec[idx]
-                    if min_y > y_vec[idx]:
-                        min_y = y_vec[idx]
-                        
+                    min_x,min_y = 20000, 20000
+                    max_x,max_y = 0 , 0
+                    #find local min-max
+                    for idx in range(len(x_vec)):
+
+                        if x_vec[idx] > max_x:
+                            max_x = x_vec[idx]
+                        if min_x > x_vec[idx]:
+                            min_x = x_vec[idx]
+
+                        if y_vec[idx] > max_y:
+                            max_y = y_vec[idx]
+                        if min_y > y_vec[idx]:
+                            min_y = y_vec[idx]
+                            
                 #comparism with global min-max
                 if max_x > xglobalmax:
                     xglobalmax = max_x
@@ -61,7 +61,7 @@ def write_rectangle2file(dcm_folder, con_file, rectangle_file):
                     yglobalmax = max_y
                 if yglobalmin > min_y:
                     yglobalmin = min_y
-            
+
             for x_coord in range(int(xglobalmax - xglobalmin)):
                 for y_coord in range(int(yglobalmax - yglobalmin)):
                     draw_square(img, int(y_coord + yglobalmin), int(x_coord + xglobalmin))
@@ -89,32 +89,32 @@ def draw_contour_rectangle2images(dcm_folder, con_file):
         for frame in hierarchical[slice].keys():
 
             img = dc.get_image(slice, frame)
-
-            # find min-max for rectangle
             xglobalmin = 20000
             xglobalmax = 0
             yglobalmin = 20000
             yglobalmax = 0
-            
-            for contour in hierarchical[slice][frame]:
-                x_vec = contour['x']
-                y_vec = contour['y']
+            for mode in hierarchical[slice][frame].keys():
+                # find min-max for rectangle
                 
-                min_x,min_y = 20000, 20000
-                max_x,max_y = 0 , 0
-                #find local min-max
-                for idx in range(len(x_vec)):
-                    
-                    if x_vec[idx] > max_x:
-                        max_x = x_vec[idx]
-                    if min_x > x_vec[idx]:
-                        min_x = x_vec[idx]
+                for contour in hierarchical[slice][frame][mode]:
+                    x_vec = contour['x']
+                    y_vec = contour['y']
 
-                    if y_vec[idx] > max_y:
-                        max_y = y_vec[idx]
-                    if min_y > y_vec[idx]:
-                        min_y = y_vec[idx]
-                        
+                    min_x,min_y = 20000, 20000
+                    max_x,max_y = 0 , 0
+                    #find local min-max
+                    for idx in range(len(x_vec)):
+
+                        if x_vec[idx] > max_x:
+                            max_x = x_vec[idx]
+                        if min_x > x_vec[idx]:
+                            min_x = x_vec[idx]
+
+                        if y_vec[idx] > max_y:
+                            max_y = y_vec[idx]
+                        if min_y > y_vec[idx]:
+                            min_y = y_vec[idx]
+                            
                 #comparism with global min-max
                 if max_x > xglobalmax:
                     xglobalmax = max_x
@@ -124,7 +124,7 @@ def draw_contour_rectangle2images(dcm_folder, con_file):
                     yglobalmax = max_y
                 if yglobalmin > min_y:
                     yglobalmin = min_y
-            
+
             for x_coord in range(int(xglobalmax - xglobalmin)):
                 for y_coord in range(int(yglobalmax - yglobalmin)):
                     draw_square(img, int(y_coord + yglobalmin), int(x_coord + xglobalmin))
