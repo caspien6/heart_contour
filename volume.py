@@ -1,4 +1,4 @@
-from con_reader import CONreader
+from data_wrangling.con_reader import CONreader
 from matplotlib import pyplot as plt
 from scipy.interpolate import splprep, splev
 import numpy as np

@@ -1,6 +1,6 @@
-import dicom_reader
-import con_reader
-import con2img
+from data_wrangling import dicom_reader
+from data_wrangling import con_reader
+from data_wrangling import con2img
 import volume as vol
 from matplotlib.pyplot import plot, imshow, show
 
