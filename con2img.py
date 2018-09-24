@@ -1,10 +1,11 @@
 import dicom_reader
 import con_reader
+from numpy import copy
 from matplotlib.pyplot import imsave, show
 
 
 def draw_square(img, x, y, size=2):
-    img[x: x + size, y: y + size] = 255
+    img[x: x + size, y: y + size] = 1
 
 
 def draw_contours2images(dcm_folder, con_file):
@@ -19,15 +20,19 @@ def draw_contours2images(dcm_folder, con_file):
     for slice in hierarchical.keys():
         for frame in hierarchical[slice].keys():
 
-            img = dc.get_image(slice, frame)
+            #img = dc.get_image(slice, frame)
 
-            # draw contours on image
-            for contour in hierarchical[slice][frame]:
+            for mode in hierarchical[slice][frame].keys():
 
-                x_vec = contour['x']
-                y_vec = contour['y']
-                for idx in range(len(x_vec)):
-                    # x, y -> y, x
-                    draw_square(img, int(y_vec[idx]), int(x_vec[idx]))
+                img = copy(dc.get_image(slice, frame)) 
+                
+                # draw contours on image
+                for contour in hierarchical[slice][frame][mode]:
 
-            imsave('imgs/img_' + str(slice) + '_' + str(frame) + '.png', img)
+                    x_vec = contour['x']
+                    y_vec = contour['y']
+                    for idx in range(len(x_vec)):
+                        # x, y -> y, x
+                        draw_square(img, int(y_vec[idx]), int(x_vec[idx]))
+
+                imsave('imgs/img_' + str(slice) + '_' + str(frame) + '_' + str(mode) + '.png', img)

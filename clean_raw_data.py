@@ -64,8 +64,8 @@ class CleanRawData:
 
                     # creating new folder structure
                     new_path = path.replace(self.root, new_root)
-                    base_folder = ''
-                    for folder in new_path.split(os.sep):
+                    base_folder = new_path.split(os.sep)[0] + '\\'
+                    for folder in new_path.split(os.sep)[1:]:
                         base_folder=os.path.join(base_folder, folder)
                         if not os.path.exists(base_folder):
                             os.mkdir(base_folder)
@@ -145,6 +145,8 @@ class CleanRawData:
         ds.InstanceCreationDate = ""
         ds.AccessionNumber = ""
         ds.StudyID = ""
+        ds.ScheduledProcedureStepID = ""
+        ds.RequestedProcedureID = ""
         ds.PatientID = ""
 
         dicom.dcmwrite(old_path, ds)
@@ -247,8 +249,8 @@ class CleanRawData:
            print("Folder: %s, current phase: %s, Progress: [%d%%]" % (chunk, process, progress))
 
 if __name__ == '__main__':
-    source = 'D:\\AI\\works\\Heart\\code\\heart_contour\\root'
-    target = 'E:\MLDATA\\SA_data\\SA_all'
+    source = 'D:\AI\works\Heart\data\SA_original'
+    target = 'D:\AI\works\Heart\data\SA_all'
     crd = CleanRawData(source, target, 4)
     crd.create_folder_chunks()
     print("Data were split up to parts. Start multiprocessing.")
