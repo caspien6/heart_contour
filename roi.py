@@ -18,8 +18,7 @@ class RoiLearn:
     def __init__(self):
         torch.manual_seed(12)
         self.conv1 = nn.Conv2d(1,100, (11,11))
-        self.sigmoid = nn.Sigmoid()
-        self.relu = nn.ReLU()
+        self.softmax = nn.Softmax()
         self.avgpool = nn.AvgPool2d(6)
         self.flatten = Flatten()
         self.full = nn.Linear(8100,1024)
@@ -27,10 +26,10 @@ class RoiLearn:
     def build_model(self):
         self.model = nn.Sequential(self.conv1,
                             self.avgpool,
-                            self.relu,
+                            self.softmax,
                             self.flatten,
                             self.full,
-                            self.sigmoid
+                            self.softmax
                             )
         self.model = self.model.double()
     
