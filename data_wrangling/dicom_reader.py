@@ -3,6 +3,7 @@ import numpy as np
 import os
 
 
+
 class DCMreader:
 
     def __init__(self, folder_name):
@@ -16,16 +17,19 @@ class DCMreader:
 
         images = []
         slice_locations = []
+        file_paths = []        
 
         dcm_files = os.listdir(folder_name)
 
         for file in dcm_files:
 
             if file.find('.dcm') != -1:
+                
                 temp_ds = dicom.dcmread(folder_name + file)
                 images.append(temp_ds.pixel_array)
                 slice_locations.append(temp_ds.SliceLocation)
-
+                file_paths.append(folder_name + file)
+        
         current_sl = -1
         frames = 0
         increasing = False
@@ -48,7 +52,8 @@ class DCMreader:
         size_h, size_w = images[0].shape
         self.dcm_images = np.ones((self.num_slices, self.num_frames, size_h, size_w))
         self.dcm_slicelocations = np.ones((self.num_slices, self.num_frames, 1))
-
+        self.dcm_file_paths = {}
+        
         for i in range(len(indices) - 1):
 
             for idx in range(indices[i], indices[i+1]):
@@ -56,12 +61,14 @@ class DCMreader:
                 frame_idx = idx - indices[i]
                 self.dcm_images[slice_idx, frame_idx, :, :] = images[idx]
                 self.dcm_slicelocations[slice_idx, frame_idx, 0] = slice_locations[idx]
+                self.dcm_file_paths[str(slice_idx) + str(frame_idx)] = file_paths[idx]
 
         for idx in range(indices[-1], len(images)):
             slice_idx = len(indices) - 1
             frame_idx = idx - indices[-1]
             self.dcm_images[slice_idx, frame_idx, :, :] = images[idx]
             self.dcm_slicelocations[slice_idx, frame_idx, 0] = slice_locations[idx]
+            self.dcm_file_paths[str(slice_idx) + str(frame_idx)] = file_paths[idx]
 
         self.num_images = len(images)
 
@@ -70,3 +77,6 @@ class DCMreader:
     
     def get_slicelocation(self, slice, frame):
         return self.dcm_slicelocations[slice, frame]
+    
+    def get_dcm_path(self,slice, frame):
+        return self.dcm_file_paths[str(slice) + str(frame)]
