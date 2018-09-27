@@ -1,10 +1,20 @@
-import dicom_reader
-import con_reader
+import data_wrangling.dicom_reader as dicom_reader
+import data_wrangling.con_reader as con_reader
 from con2img import draw_square
 from matplotlib.pyplot import plot, imshow, show,imsave
 import csv
 import os
+import glob
 
+def write_all_rectangle2file(rootdir):
+    rectangle_file = rootdir + 'rectangle.csv'
+    for subdir, dirs, files in os.walk(rootdir):
+        dcm_folder = glob.glob(subdir + './*.dcm')
+        if len(dcm_folder) != 0 and len(glob.glob(subdir.rsplit('\\', 1)[0] + '/*.con')) != 0:
+            dcm_folder = subdir 
+            con_file = glob.glob(dcm_folder.rsplit('\\', 1)[0] + '/*.con')[0]
+            write_rectangle2file(dcm_folder+ '\\', con_file, rectangle_file)
+        
 
 #Write embracing rectangle info into a rectang.csv file
 #dcm_folder - location where your .dcm images take place
@@ -18,9 +28,6 @@ def write_rectangle2file(dcm_folder, con_file, rectangle_file):
     print("Con files were read in!")
 
     hierarchical = cn.get_hierarchical_contours()
-
-    if os.path.exists(rectangle_file):
-        os.remove(rectangle_file)
         
     for slice in hierarchical.keys():
         for frame in hierarchical[slice].keys():
@@ -69,7 +76,8 @@ def write_rectangle2file(dcm_folder, con_file, rectangle_file):
             with open(rectangle_file, 'a',newline='') as myfile:
                 wr = csv.writer(myfile, quoting=csv.QUOTE_ALL, delimiter=';')
                 #slice, frame number, x, y, height, widht
-                wr.writerow([slice, frame, xglobalmin, yglobalmin, int(yglobalmax - yglobalmin), int(xglobalmax - xglobalmin)])
+                wr.writerow([dc.get_dcm_path(slice,frame),slice, frame, xglobalmin, yglobalmin, \
+                             int(yglobalmax - yglobalmin), int(xglobalmax - xglobalmin)])
 
 
 
