@@ -1,5 +1,5 @@
-import dicom_reader
-import con_reader
+from data_wrangling import dicom_reader
+from data_wrangling import con_reader
 from numpy import copy
 from matplotlib.pyplot import imsave, show
 

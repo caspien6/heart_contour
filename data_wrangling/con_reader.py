@@ -18,7 +18,8 @@ class CONreader:
             'Image_resolution=',
             'Slicethickness=',
             'Patient_weight=',
-            'Patient_height='
+            'Patient_height',
+            'Study_description='
         ]
 
         self.volume_data = {
@@ -26,7 +27,8 @@ class CONreader:
             volumerelated_tags[1]: None, 
             volumerelated_tags[2]: None,
             volumerelated_tags[3]: None,
-            volumerelated_tags[4]: None
+            volumerelated_tags[4]: None,
+            volumerelated_tags[5]: None
         }
 
         con = open(file_name, 'r')
@@ -51,7 +53,7 @@ class CONreader:
         def find_xycontour_tag():
             line = con.readline()
             find_volumerelated_tags(line)
-            while line.find(con_tag) == -1 and line.find(stop_tag) == -1:
+            while line.find(con_tag) == -1 and line.find(stop_tag) == -1 and line != "":
                 line = con.readline()
                 find_volumerelated_tags(line)
             return line
@@ -73,14 +75,14 @@ class CONreader:
                 contour.append((float(xs), float(ys)))
             return contour
 
-        tag = find_xycontour_tag()
-        while tag.find(stop_tag) == -1:
+        line = find_xycontour_tag()
+        while line.find(stop_tag) == -1 and line != "":
 
             slice, frame, mode = identify_slice_frame_mode()
             num = number_of_contour_points()
             contour = read_contour_points(num)
             self.container.append((slice, frame, mode, contour))
-            tag = find_xycontour_tag()
+            line = find_xycontour_tag()
 
         con.close()
         return
@@ -140,8 +142,18 @@ class CONreader:
         weight = float(weight_kg[0])
 
         # process height
-        height_string = self.volume_data['Patient_height=']
-        height_cm = height_string.split(' cm')
-        height = float(height_cm[0])
-
+        if 'Patient_height=' in self.volume_data.keys():
+            height_string = self.volume_data['Patient_height=']
+            height = height_string.split(" ")[0]
+        else:
+            height_string = str(self.volume_data['Study_description='])
+            height = ''
+            for char in height_string:
+                if char.isdigit():
+                    height += char
+        if height == '':
+            height = 178
+        else:
+            height = float(height)
+        
         return (size_h, size_w), (res_h, res_w), width, weight, height

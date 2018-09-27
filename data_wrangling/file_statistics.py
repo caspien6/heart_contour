@@ -40,7 +40,7 @@ def dcom_con_pairs(folder):
     print("Number of single cons: %.1f %%"%(num_singlecon/num_all * 100.0))
     print("Number of strange cases: %.1f %%"%(num_strange/num_all * 100.0))
 
-#folder = "D:\AI\works\Heart\data\SA_all_4"
+#folder = "D:\AI\works\Heart\data\sa_all_5"
 #dcom_con_pairs(folder)
 
 
@@ -78,5 +78,5 @@ def delete_unpaired(folder):
 
     print("Kept files: %.1f %%"%(num_kept/num_all * 100.0))
 
-folder = "D:\AI\works\Heart\data\SA_all_1"
+folder = "D:\AI\works\Heart\data\sa_all_5"
 delete_unpaired(folder)
