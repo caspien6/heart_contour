@@ -1,4 +1,4 @@
-from con_reader import CONreader
+from data_wrangling.con_reader import CONreader
 from matplotlib import pyplot as plt
 from scipy.interpolate import splprep, splev
 import numpy as np
@@ -46,15 +46,14 @@ class Volume:
         while idx < curve.shape[0]:
             x1, y1 = curve[idx, 0], curve[idx, 1]
             x_, y_ = x0, y0
+            closed.append((x0, y0))
             if abs(x1 - x0) > 1:
-                x_ = x0 + (1 if x1 - x0 > 0 else -1)
+                x_ = x0 + int((x1 - x0)/abs(x1 - x0))
             if abs(y1 - y0) > 1:
-                y_ = y0 + (1 if y1 - y0 > 0 else -1)
-            if abs(x1 - x0) > 1 or abs(y1 - y0) > 1:
-                closed.append((x_, y_))
+                y_ = y0 + int((y1 - y0)/abs(y1 - y0))
+            if (abs(x1 - x0) > 1) or (abs(y1 - y0) > 1):
                 x0, y0 = x_, y_
             else:
-                closed.append((x0, y0))
                 x0, y0 = x1, y1
                 idx += 1
 
@@ -118,8 +117,10 @@ class Volume:
         h, w = plane.shape
         complementer = np.sum(plane)
         area_in_pixels = h * w - complementer + np.sum(plane1)
-        if area_in_pixels == 0:
+        if (h * w - complementer) == 0:
             plt.imshow(plane1)
+            plt.show()
+            plt.imshow(plane)
             plt.show()
         return float(area_in_pixels) * self.fview[0] / self.img_res[0] * self.fview[1] / self.img_res[1]
     
@@ -176,9 +177,9 @@ class Volume:
                 areas = []
                 frames = []
                 for frame in self.contours[slice].keys():
-                    frames.append(frame)
                     if mode in self.contours[slice][frame].keys():
                         curve = self.contours[slice][frame][mode]
+                        frames.append(frame)
                         areas.append(calculate_area(curve))
 
                 if len(areas) > 1:
@@ -198,13 +199,18 @@ class Volume:
                     contour_areas[slice][side]['systole'] = None
         return contour_areas
 
-    def calculate_volumes(self, variant='triangular'):
-        if variant == 'pixel':
-            areas = self._grouping(self._calculate_area_pixel)
-        elif variant == 'triangular':
-            areas = self._grouping(self.__calculate_area_triangular)
+    def calculate_volumes(self):
+        areas_left = self._grouping(self._calculate_area_pixel)
+        areas_right = self._grouping(self.__calculate_area_triangular)
 
         def volume(side, state):
+            if side == 'left':
+                areas = areas_left
+            elif side == 'right':
+                areas = areas_right
+            else:
+                raise AttributeError("Unkown side: %s"%side)
+
             slices = list(areas.keys())
             V = 0
             for idx in range(len(slices)-1):
@@ -225,10 +231,10 @@ class Volume:
         self.lved_i = self.lved / bsa      # left ED-index
         self.lves_i = self.lves / bsa      # left ES-index
         self.lvsv = self.lved - self.lves  # left Stroke-volume
-        self.lvsv_i = self.lvsv / bsa      # left SV index
+        self.lvsv_i = self.lvsv / bsa      # left SV-index
 
         # other metrics: right
         self.rved_i = self.rved / bsa      # right ED-index
         self.rves_i = self.rves / bsa      # right ES-index
         self.rvsv = self.rved - self.rves  # right Stroke-volume
-        self.rvsv_i = self.rvsv / bsa      # right SV index
+        self.rvsv_i = self.rvsv / bsa      # right SV-index

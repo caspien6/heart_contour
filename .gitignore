@@ -3,5 +3,5 @@
 __pycache__/
 *.dcm
 *.con
-*.ipynb
 *.png
+*.csv
