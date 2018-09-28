@@ -50,7 +50,19 @@ class TransformRaw:
         '''
         Iterates over all of the files and executes the filters to process the current element.
         '''
-        pass
+        for root, folders, files in os.walk(self.src):
+            for file_name in files:
+                if file_name.lower().endswith('.con'):
+                    assert len(files) == 1, "Only one con file should exist for a series id."
+                    assert len(folders) == 1, "Only an imgs folder should exist."
+                    dcm_folder = os.path.join(root, folders[0])
+                    con_file = os.path.join(root, file_name)
+
+                    self.dcms = dicom_reader.DCMreader(dcm_folder)
+                    self.cons = con_reader.CONreader(con_file)
+                    self._iterator()
+
+        print("Execution was done.")
     
     def _iterator(self):
         '''
