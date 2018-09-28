@@ -1,6 +1,6 @@
 from data_wrangling import dicom_reader
 from data_wrangling import con_reader
-import con2img
+from data_wrangling import con2img
 import volume as vol
 from matplotlib.pyplot import plot, imshow, show
 
@@ -43,8 +43,8 @@ def test_con_volumedata():
 #test_con_volumedata()
 
 def test_con2img():
-    #base_path = "../../data/SA_all_2/19194862AMR806/1401/"
-    #base_path = "../../data/SA_all_2/19307824AMR806/1301/"
+    #base_path = "../../data/sa_all_2/19194862AMR806/1401/"
+    #base_path = "../../data/sa_all_2/19307824AMR806/1301/"
     #base_path = "../../data/sa_all_1/17827245AMR809/1301/"
     #base_path = "../../data/sa_all_2/19049093AMR806/2301/"
     base_path = "../../data/sa_all_1/17128355AMR812/1001/"
@@ -54,7 +54,7 @@ def test_con2img():
     con2img.draw_contours2images(dcm_path, con_path)
     print("OK: test_con2img")
 
-#test_con2img()
+test_con2img()
 
 def test_volume():
     path1 = "../../data/volume_test/Takacs_Akos_20180131_038318067_STD19194862AMR806_SER1401_ACQ14.con"
@@ -93,4 +93,4 @@ def test_volume():
     print('RVSV: %.3f'%v.rvsv)
     print('RVSV-idx: %.3f'%v.rvsv_i)
 
-test_volume()
+#test_volume()
