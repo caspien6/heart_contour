@@ -1,7 +1,7 @@
 from data_wrangling import dicom_reader
 from data_wrangling import con_reader
 from data_wrangling import con2img
-import volume as vol
+from metrics import volume as vol
 from matplotlib.pyplot import plot, imshow, show
 
 

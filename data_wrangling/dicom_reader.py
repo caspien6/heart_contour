@@ -6,7 +6,11 @@ import os
 class DCMreader:
 
     def __init__(self, folder_name):
-
+        '''
+        Reads in the dcm files in a folder which corresponds to a patient.
+        It follows carefully the physical slice locations and the frames in a hearth cycle.
+        It does not matter if the location is getting higher or lower. 
+        '''
         self.num_slices = 0
         self.num_frames = 0
 
@@ -27,7 +31,7 @@ class DCMreader:
         increasing = False
         indices = []
         for idx, slice_loc in enumerate(slice_locations):
-            if slice_loc != current_sl:
+            if slice_loc != current_sl:  # this means a new slice is started
                 self.num_slices += 1
                 self.num_frames = max(self.num_frames, frames)
                 frames = 0

@@ -13,7 +13,6 @@ class Volume:
         - ES, ES index
         - SV (Stroke volume)
         - SV index
-        - EF
         They are calculated for both the left and right side.
         '''
         self.con_file = con_file
@@ -48,11 +47,11 @@ class Volume:
             x_, y_ = x0, y0
             closed.append((x0, y0))
             if abs(x1 - x0) > 1:
-                x_ = x0 + int((x1 - x0)/abs(x1 - x0))
+                x_ = x0 + int((x1 - x0)/abs(x1 - x0))  # move into the suitable direction
             if abs(y1 - y0) > 1:
                 y_ = y0 + int((y1 - y0)/abs(y1 - y0))
             if (abs(x1 - x0) > 1) or (abs(y1 - y0) > 1):
-                x0, y0 = x_, y_
+                x0, y0 = x_, y_  # if the gap is too big then new pixels are added until it is closed
             else:
                 x0, y0 = x1, y1
                 idx += 1
@@ -86,7 +85,7 @@ class Volume:
 
         c_point = (0, 0)   # current point
         plane[c_point] = 1 # mark current point as discovered
-        queue = [c_point]  # list for storing the points
+        queue = [c_point]  # list for storing the points (FIFO list)
         while len(queue) > 0:
             # detach next point
             c_point = queue[0]
@@ -97,11 +96,11 @@ class Volume:
                 y = c_point[0] + de[0]
                 x = c_point[1] + de[1]
                     
-                is_on_plane = (x >= 0 and x < width)
-                is_on_plane = (is_on_plane and y >= 0 and y < height)
+                is_on_plane = (x >= 0 and x < width)                   # check for x
+                is_on_plane = (is_on_plane and y >= 0 and y < height)  # check for y
                 
                 if is_on_plane:
-                    is_unknown = (plane[y, x] == 0)
+                    is_unknown = (plane[y, x] == 0)  # check if we saw this point earlier
                     # if the point is valid then append it to the list
                     if is_on_plane and is_unknown:
                         # mark current point as discovered and put into FIFO
@@ -115,9 +114,9 @@ class Volume:
         plane1 = self._bbox(curve_closed)
         plane = self._bfs(np.copy(plane1))
         h, w = plane.shape
-        complementer = np.sum(plane)
+        complementer = np.sum(plane)  # number of pixels outside of the curve
         area_in_pixels = h * w - complementer + np.sum(plane1)
-        if (h * w - complementer) == 0:
+        if (h * w - complementer) == 0:  # in case of an open curve, show it
             plt.imshow(plane1)
             plt.show()
             plt.imshow(plane)
@@ -186,7 +185,7 @@ class Volume:
                     contour_areas[slice][side]['diastole'] = max(areas)
                     contour_areas[slice][side]['systole'] = min(areas)
                 elif len(areas) == 1:
-                    ds = np.array([frames[0] - 0, frames[0] - 23, frames[0] - 8])
+                    ds = np.array([frames[0] - 0, frames[0] - 23, frames[0] - 8])  # this is a heuristic
                     idx = np.argmin(np.abs(ds))
                     if idx in [0, 1]:
                         contour_areas[slice][side]['diastole'] = areas[0]
@@ -207,7 +206,7 @@ class Volume:
             if side == 'left':
                 areas = areas_left
             elif side == 'right':
-                areas = areas_right
+                areas = areas_right  # the triangular method is more accurate for the right side
             else:
                 raise AttributeError("Unkown side: %s"%side)
 
