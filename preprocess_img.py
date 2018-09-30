@@ -1,6 +1,6 @@
 import data_wrangling.dicom_reader as dicom_reader
 import data_wrangling.con_reader as con_reader
-from con2img import draw_square
+from data_wrangling.con2img import draw_square
 from matplotlib.pyplot import plot, imshow, show,imsave
 import csv
 import os

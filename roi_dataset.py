@@ -34,6 +34,8 @@ class RoiDataset(Dataset):
         return len(self.contour_data)
     
     def __getitem__(self, idx):
+        if isinstance(idx,torch.Tensor):
+            idx = idx.item()
         cont = self.contour_data.iloc[idx]
         sl = int(cont['slice'])
         fr = int(cont['frame'])
