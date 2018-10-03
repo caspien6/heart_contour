@@ -9,6 +9,8 @@ Reads in the origial raw measurements (*.dicom and *.con files).
 Then the following operations are performed:
 - anonimyzation
 - choose the important images
+The process uses a pipeline patters. There are filters 
+which does the next step of the data processing.
 '''
 class CleanRawData:
 
@@ -30,6 +32,7 @@ class CleanRawData:
     def create_folder_chunks(self):
         '''
         Splits the data into parts for multiprocessing.
+        Each part is stored in a subfolder.
         '''
         dcms_per_threads = [0] * self.thread_num
         cons_per_threads = [0] * self.thread_num
@@ -37,7 +40,7 @@ class CleanRawData:
         base = self.root.split(os.sep)[-1]
         new_roots = [self.root.replace(base, 'root' + str(i)) for i in range(self.thread_num)]
 
-        for path, _, files in os.walk(self.root): # iterate over all the folders
+        for path, _, files in os.walk(self.root):  # iterate over all the folders
 
             num_files = len(files)
             files_per_thread = [num_files // self.thread_num] * self.thread_num
@@ -64,7 +67,7 @@ class CleanRawData:
 
                     # creating new folder structure
                     new_path = path.replace(self.root, new_root)
-                    base_folder = new_path.split(os.sep)[0] + '\\'
+                    base_folder = new_path.split(os.sep)[0] + '\\'  # joining volume label to first folder
                     for folder in new_path.split(os.sep)[1:]:
                         base_folder=os.path.join(base_folder, folder)
                         if not os.path.exists(base_folder):

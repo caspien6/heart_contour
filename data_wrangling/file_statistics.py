@@ -1,6 +1,11 @@
 import os
 import shutil
 
+'''
+This module deals with the dcm and con pairs.
+Creates statistics and deletes files without pairs.
+'''
+
 def dcom_con_pairs(folder):
     '''
     folder - in the folder the subfolders are in the structure 

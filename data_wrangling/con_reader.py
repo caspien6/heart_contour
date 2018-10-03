@@ -1,18 +1,18 @@
 
 
-RED_COLOR = (255, 0, 0)
-GREEN_COLOR = (0, 255, 0)
-BLUE_COLOR = (0, 0, 255)
-
-
 class CONreader:
 
     def __init__(self, file_name):
 
+        '''
+        Reads in a con file and saves the curves grouped according to its corresponding slice, frame and place.
+        Finds the tags necessary to calculate the volume metrics.
+        '''
+
         self.container = []
 
-        con_tag = "XYCONTOUR"
-        stop_tag = "POINT"
+        con_tag = "XYCONTOUR"  # start of the contour data
+        stop_tag = "POINT"     # if this is available, prevents from reading unnecessary lines
         volumerelated_tags = [
             'Field_of_view=',
             'Image_resolution=',
@@ -41,11 +41,11 @@ class CONreader:
         
         def mode2colornames(mode):
             if mode == 0:
-                return 'red' # check the colors out
+                return 'red'     # red means left (color means the same as in the official software)
             elif mode == 1:
-                return 'green'
+                return 'green'   # left but contains the myocardium
             elif mode == 5:
-                return 'yellow'
+                return 'yellow'  # right
             else:
                 print('Warning: Unknown mode.')
                 return 'other'
@@ -94,9 +94,9 @@ class CONreader:
         data = {}
 
         for item in self.container:
-            slice = item[0]
-            frame = item[1]
-            mode = item[2]
+            slice = item[0]   
+            frame = item[1]   # frame in a hearth cycle
+            mode = item[2]    # mode can be red, green, yellow
             contour = item[3]
 
             # rearrange the contour
@@ -142,7 +142,9 @@ class CONreader:
         weight = float(weight_kg[0])
 
         # process height
-        if 'Patient_height=' in self.volume_data.keys():
+        # Unfortunately, patient height is not always available.
+        # Study description can help in that case but its form changes heavily.
+        if 'Patient_height=' in self.volume_data.keys():  
             height_string = self.volume_data['Patient_height=']
             height = height_string.split(" ")[0]
         else:
