@@ -1,5 +1,6 @@
 from data_wrangling import dicom_reader
 from data_wrangling import con_reader
+from data_wrangling import transform_raw as tr
 from data_wrangling import con2img
 from metrics import volume as vol
 from matplotlib.pyplot import plot, imshow, show
@@ -54,7 +55,7 @@ def test_con2img():
     con2img.draw_contours2images(dcm_path, con_path)
     print("OK: test_con2img")
 
-test_con2img()
+#test_con2img()
 
 def test_volume():
     path1 = "../../data/volume_test/Takacs_Akos_20180131_038318067_STD19194862AMR806_SER1401_ACQ14.con"
@@ -94,3 +95,13 @@ def test_volume():
     print('RVSV-idx: %.3f'%v.rvsv_i)
 
 #test_volume()
+
+def test_transform_raw():
+
+    src = 'src'
+    dst = 'dst'
+
+    transform = tr.TransformRaw(src, dst)
+    transform.executor()
+
+test_transform_raw()
