@@ -40,10 +40,11 @@ def dcom_con_pairs(folder):
             else:
                 num_strange += 1
 
-    print("Number of pairs: %.1f %%"%(num_pairs/num_all * 100.0))
-    print("Number of single dcms: %.1f %%"%(num_singledcm/num_all * 100.0))
-    print("Number of single cons: %.1f %%"%(num_singlecon/num_all * 100.0))
-    print("Number of strange cases: %.1f %%"%(num_strange/num_all * 100.0))
+    print("Number of files: %d"%num_all)
+    print("Percentage of pairs: %.1f %%"%(num_pairs/num_all * 100.0))
+    print("Percentage of single dcms: %.1f %%"%(num_singledcm/num_all * 100.0))
+    print("Percentage of single cons: %.1f %%"%(num_singlecon/num_all * 100.0))
+    print("Percentage of strange cases: %.1f %%"%(num_strange/num_all * 100.0))
 
 #folder = "D:\AI\works\Heart\data\sa_all_5"
 #dcom_con_pairs(folder)

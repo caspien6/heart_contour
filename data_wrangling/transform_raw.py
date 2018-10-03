@@ -155,7 +155,6 @@ class TransformRaw:
         reconstructed by a bspline with tolerably small error.
         These points will be the target of the model.
         '''
-
         def control_points(side):
             controls = []
             
