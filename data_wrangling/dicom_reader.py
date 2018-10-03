@@ -24,8 +24,7 @@ class DCMreader:
         for file in dcm_files:
 
             if file.find('.dcm') != -1:
-                
-                temp_ds = dicom.dcmread(folder_name + file)
+                temp_ds = dicom.dcmread(os.path.join(folder_name, file))
                 images.append(temp_ds.pixel_array)
                 slice_locations.append(temp_ds.SliceLocation)
                 file_paths.append(folder_name + file)
