@@ -10,7 +10,7 @@ import csv
 import os
 
 
-BORDER = 10
+BORDER = 15
 SIZE = 110
 CONTROL_NUM = 8
 
@@ -144,9 +144,9 @@ class TransformRaw:
         Saves the image into the destination folder. (dst/images/)
         '''
         self.img_name = "img_" + str(self.image_id) + ".npy"
-        file_path = os.path.join(os.path.join(self.dst, "images"), "img_" + str(self.image_id) + ".png")
-        #np.save(file_path, self.image, allow_pickle=False)
-        imsave(file_path, (self.image - np.min(self.image))/(np.max(self.image) - np.min(self.image)))
+        file_path = os.path.join(os.path.join(self.dst, "images"), "img_" + str(self.image_id) + ".npy")
+        np.save(file_path, self.image, allow_pickle=False)
+        #imsave(file_path, (self.image - np.min(self.image))/(np.max(self.image) - np.min(self.image)))
 
     def _filter_control_points(self):
         '''

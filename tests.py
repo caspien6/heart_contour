@@ -2,6 +2,7 @@ from data_wrangling import dicom_reader
 from data_wrangling import con_reader
 from data_wrangling import transform_raw as tr
 from data_wrangling import con2img
+from contour.train_loader import ContourTrainLoader
 from metrics import volume as vol
 from matplotlib.pyplot import plot, imshow, show
 
@@ -104,4 +105,19 @@ def test_transform_raw():
     transform = tr.TransformRaw(src, dst)
     transform.executor()
 
-test_transform_raw()
+#test_transform_raw()
+
+def test_train_loader():
+
+    folder = 'dst'
+
+    train_loader = ContourTrainLoader(folder).get_trainloader(4)
+    print('Start')
+    for i, data_batched in enumerate(train_loader):
+        print(data_batched['image'].size(0), data_batched['image'].size(1), data_batched['image'].size(2), data_batched['image'].size(3))
+        print(data_batched['left'].size(0), data_batched['left'].size(1), data_batched['left'].size(2))
+        print(data_batched['right'].size(0), data_batched['right'].size(1), data_batched['right'].size(2))
+        if i > 5:
+            break
+
+test_train_loader()
