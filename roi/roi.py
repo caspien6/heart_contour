@@ -8,6 +8,7 @@ from os.path import isfile, join
 import os
 import torch
 import torch.nn as nn
+from autoencoder import Autoencoder
 
 
 class Flatten(nn.Module):
@@ -16,7 +17,7 @@ class Flatten(nn.Module):
 
 class RoiLearn:
     def __init__(self):
-        torch.manual_seed(12)
+        torch.manual_seed(23)
         self.conv1 = nn.Conv2d(1,100, (11,11))
         self.softmax = nn.Softmax()
         self.sigmoid = nn.Sigmoid()
@@ -83,8 +84,7 @@ class RoiLearn:
                 # first loss is the loss what the user can choose
                 first_loss = criterion(self.normalize_range(sample_batched['image']), decoded)                
                 # the second loss member is the penalty loss, this helps the higher feature learning
-                sparsity_loss = crit2( F.log_softmax(torch.mean(encoded, dim = 0)) , rho)
-                                
+                sparsity_loss = crit2( F.log_softmax(torch.mean(encoded, dim = 0)) , rho)        
                 loss = first_loss + BETA*sparsity_loss
                 
                 optimizer.zero_grad()
