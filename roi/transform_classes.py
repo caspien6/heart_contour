@@ -9,11 +9,13 @@ from sklearn.feature_extraction.image import extract_patches_2d
 
 
 class GetRandomPatch(object):
-    """Get a random 11x11 patch from an image"""
-
+    """Get a random NxN patch from an image"""
+    def __init__(self, pixel_count):
+        self.num_pix = pixel_count
+    
     def __call__(self, image):
-        image = extract_patches_2d(image, (11, 11), 1)
-        
+        image = extract_patches_2d(image, (self.num_pix, self.num_pix), 1)
+        image = resize(image, (1,11, 11), anti_aliasing=True)
         image = np.reshape(image, (121))
         image = image.astype(float)
         image = np.expand_dims(image , axis = 1)
