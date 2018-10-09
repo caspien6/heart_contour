@@ -1,5 +1,7 @@
 from skimage.util import crop
 from skimage.transform import resize
+from scipy.interpolate import splprep, splev
+import numpy as np
 
 
 def get_roi(image, contours, size, border):
@@ -52,8 +54,32 @@ def get_roi(image, contours, size, border):
 
 def spline(control_points):
     '''
-    Fit a continuous closed curve on the control points.
+    Fiting a continuous closed curve on the control points.
     control_points - numpy matrix with the shape (N, 2), 
                 where N is the number of control points
     '''
-    pass
+    pts = control_points
+    tck, u = splprep(pts.T, u=None, s=0.0, per=1) 
+    u_new = np.linspace(u.min(), u.max(), 1000)
+    x_new, y_new = splev(u_new, tck, der=0)
+    
+    d = {'x': [], 'y': []}
+    for i in range(x_new.shape[0]):
+        d['x'].append(x_new[i])
+        d['y'].append(y_new[i])
+    return d
+
+
+def draw_con2img(image, control_points):
+    '''
+    Drawing the control points on the given image.
+    ''' 
+    def draw_square(img, x, y, size=2):
+        img[x: x + size, y: y + size] = 1
+              
+    contour = spline(control_points)
+    x_vec = contour['x']
+    y_vec = contour['y']
+    for idx in range(len(x_vec)):
+        # x, y -> y, x
+        draw_square(image, int(y_vec[idx]), int(x_vec[idx]))

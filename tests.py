@@ -4,7 +4,9 @@ from data_wrangling import transform_raw as tr
 from data_wrangling import con2img
 from contour.train_loader import ContourTrainLoader
 from metrics import volume as vol
-from matplotlib.pyplot import plot, imshow, show
+from matplotlib.pyplot import plot, imshow, imsave, show
+import numpy as np
+import utils
 
 
 def test_dicom_reader():
@@ -120,4 +122,57 @@ def test_train_loader():
         if i > 5:
             break
 
-test_train_loader()
+#test_train_loader()
+
+def test_spline():
+    
+    def draw_square(img, x, y, size=2):
+        img[x: x + size, y: y + size] = 1
+
+    base_path = "../../data/sa_all_1/17128355AMR812/1001/"
+    dcm_path = base_path + "imgs/"
+    con_path = base_path + "contour.con"
+
+    dc = dicom_reader.DCMreader(dcm_path)
+    print("Dicom files were read in!")
+    cn = con_reader.CONreader(con_path)
+    print("Con files were read in!")
+
+    hierarchical = cn.get_hierarchical_contours()
+
+    for slice in hierarchical.keys():
+        for frame in hierarchical[slice].keys():
+
+            #img = dc.get_image(slice, frame)
+
+            for mode in hierarchical[slice][frame].keys():
+
+                img = np.copy(dc.get_image(slice, frame)) 
+                
+                # draw contours on image
+                for contour in hierarchical[slice][frame][mode]:
+
+                    x_vec = contour['x']
+                    y_vec = contour['y']
+                    controls = np.zeros((15, 2))
+                    step_size = len(x_vec) / 15.0
+                    for idx in range(15):
+                        index = int(idx * step_size)
+                        x = x_vec[index]
+                        y = y_vec[index]
+
+                        controls[idx, 0] = x
+                        controls[idx, 1] = y
+                    
+                    contour = utils.spline(controls)
+                    x_vec = contour['x']
+                    y_vec = contour['y']
+                    for idx in range(len(x_vec)):
+                        
+                        # x, y -> y, x
+                        draw_square(img, int(y_vec[idx]), int(x_vec[idx]))
+
+                imsave('imgs/img_' + str(slice) + '_' + str(frame) + '_' + str(mode) + '.png', img)
+    print("OK: test_spline")
+
+test_spline()
