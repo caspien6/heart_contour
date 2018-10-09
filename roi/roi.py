@@ -2,12 +2,13 @@ import numpy as np
 import png
 import pydicom
 from sklearn.preprocessing import normalize
-
+import torch.nn.functional as F
 from os import listdir
 from os.path import isfile, join
 import os
 import torch
 import torch.nn as nn
+from autoencoder import Autoencoder
 
 
 class Flatten(nn.Module):
@@ -16,23 +17,19 @@ class Flatten(nn.Module):
 
 class RoiLearn:
     def __init__(self):
-        torch.manual_seed(12)
+        torch.manual_seed(23)
         self.conv1 = nn.Conv2d(1,100, (11,11))
         self.softmax = nn.Softmax()
         self.sigmoid = nn.Sigmoid()
         self.avgpool = nn.AvgPool2d(6)
         self.flatten = Flatten()
         self.full = nn.Linear(8100,1024)
-        self.encoder = nn.Linear(121,100)
-        self.decoder = nn.Linear(100,121)
+        #self.encoder = nn.Linear(121,100)
+        #self.decoder = nn.Linear(100,121)
           
     # Autoencoder architecture
     def build_ae(self):
-        self.autoencoder = nn.Sequential(self.encoder,
-                                   self.sigmoid,
-                                   self.decoder,
-                                   self.sigmoid
-                                  )
+        self.autoencoder = Autoencoder(121,100)
         self.autoencoder = self.autoencoder.double()
         
     # Autoencoder W2 and b2 to the original model conv1 layer features and biases.
@@ -53,24 +50,49 @@ class RoiLearn:
         conv1_features[0].requires_grad=False
         conv1_features[1].requires_grad=False
         
-    def learn_ae(self, dataset_loader,criterion, optimizer, ep = 1, lr = 0.01):
+    
+    def normalize_range(self, vector):
+        min_v = torch.min(vector)        
+        range_v = torch.max(vector) - min_v
+        
+        if range_v > 0:
+            normalised = (vector - min_v) / range_v
+        else:
+            normalised = torch.zeros(vector.size())
+        return normalised
+
+    ''' Learn the autoencoder features for the original convolution weights.
+        Params:
+            dataset_loader - the prepared dataset inside a configured pytorch dataloader
+            optimizer - for the backpropagation
+            criterion - method for the half part of the loss function
+            ep - epochs
+            lr - learning rate
+            BETA - weightening the sparsity part of the loss function
+            RHO - the sample distribution for comparing the average activation (sparse part of the loss function too.)
+    '''     
+    def learn_ae(self, dataset_loader, optimizer,criterion, ep = 1, lr = 0.01, BETA = 3, RHO = 0.1):
+        
+        rho = torch.tensor([RHO for _ in range(self.autoencoder.n_hidden)]).double()
+        crit2 = nn.KLDivLoss(size_average=False)
         for epoch in range(ep):
             for i_batch, sample_batched in enumerate(dataset_loader):
-                #print(i_batch, sample_batched['image'].size(),sample_batched['mask'].size())
-                #print(sample_batched['image'].shape)
-                # Forward Propagation
-                y_pred = self.autoencoder(sample_batched['image'])
-                # Compute and print loss
-                loss = criterion(y_pred, sample_batched['image'])
-                print('epoch: ', epoch,' loss: ', loss.item())
-                # Zero the gradients
+    
+                # Forward
+                encoded, decoded = self.autoencoder(sample_batched['image'])
+                # Loss
+                # first loss is the loss what the user can choose
+                first_loss = criterion(self.normalize_range(sample_batched['image']), decoded)                
+                # the second loss member is the penalty loss, this helps the higher feature learning
+                sparsity_loss = crit2( F.log_softmax(torch.mean(encoded, dim = 0)) , rho)        
+                loss = first_loss + BETA*sparsity_loss
+                
                 optimizer.zero_grad()
-
-                # perform a backward pass (backpropagation)
                 loss.backward()
-
-                # Update the parameters
                 optimizer.step()
+            print('epoch: ', epoch,' loss: ', loss.item())
+        
+                
     
     def build_model(self):
         self.model = nn.Sequential(self.conv1,
