@@ -22,6 +22,7 @@ class RoiDataset(Dataset):
         """
         'height is  (y length) width is  (x length)'
         self.contour_data = pd.read_csv(csv_file,sep=';', names=('path','slice', 'frame', 'xmin', 'ymin', 'height','width' ))
+        self.contour_data = self.contour_data.sample(200)
         self.dcm_images = {}
         for path in self.contour_data['path']:
             temp_ds = dicom.dcmread(path)
