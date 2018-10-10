@@ -3,7 +3,6 @@ import numpy as np
 import os
 
 
-
 class DCMreader:
 
     def __init__(self, folder_name):

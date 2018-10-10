@@ -1,16 +1,15 @@
 from skimage.io import imsave
-from skimage.util import crop
-from skimage.transform import resize
 from data_wrangling import dicom_reader
 from data_wrangling import con_reader
 import pandas as pd
 import numpy as np
 import shutil
+import utils
 import csv
 import os
 
 
-BORDER = 10
+BORDER = 15
 SIZE = 110
 CONTROL_NUM = 8
 
@@ -90,63 +89,21 @@ class TransformRaw:
                 self.contours = contours_all_slice[slice][frame]  # the red, yellow, (green) contours on the correponding image
                 
                 # do the processing on the corresponding image and the contours 
-                self._filter_bbox()
-                self._filter_crop_roi()
-                self._filter_rescale()
+                self.image = utils.get_roi(self.image, self.contours, (SIZE, SIZE), BORDER) 
                 self._filter_save()
                 self._filter_control_points()
                 self._filter_newrow()
 
         print("Progress: [%d%%]. \r"%(self.processed_cons/self.num_cons * 100.0), end='')
     
-    def _filter_bbox(self):
-        '''
-        Find the bounding box around the contours.
-        '''
-        def bbox(contour):
-            # contour - dictionary: keys are x, y, values are lists
-            x0 = min(contour['x'])  # top left corner of the bounding box
-            y0 = min(contour['y'])  # top left corner
-            x1 = max(contour['x'])  # right bottom corner
-            y1 = max(contour['y'])  # right bottom corner
-            return (x0, y0, x1, y1)
-        x0, y0, x1, y1 = None, 0, 0, 0  # the overall bbox 
-        for mode in self.contours.keys():
-            box = bbox(self.contours[mode][0])
-            if x0 is None:
-                x0, y0, x1, y1 = box
-            else:
-                x0 = min(x0, box[0])
-                y0 = min(y0, box[1])
-                x1 = max(x1, box[2])
-                y1 = max(y1, box[3])
-        x0 = max(x0 - BORDER, 0)
-        y0 = max(y0 - BORDER, 0)
-        x1 = min(x1 + BORDER, self.image.shape[1]-1)
-        y1 = min(y1 + BORDER, self.image.shape[0]-1)
-        self.bbox = (x0, y0, x1, y1)
-    
-    def _filter_crop_roi(self):
-        '''
-        Crop the image according to the bounding box.
-        '''
-        x0, y0, x1, y1 = self.bbox
-        self.image = crop(self.image, [(y0, self.image.shape[0]-y1-1), (x0, self.image.shape[1]-x1-1)])
-
-    def _filter_rescale(self):
-        '''
-        Rescale image to size SIZE x SIZE.
-        '''
-        self.image = resize(self.image, (SIZE, SIZE))
-    
     def _filter_save(self):
         '''
         Saves the image into the destination folder. (dst/images/)
         '''
         self.img_name = "img_" + str(self.image_id) + ".npy"
-        file_path = os.path.join(os.path.join(self.dst, "images"), "img_" + str(self.image_id) + ".png")
-        #np.save(file_path, self.image, allow_pickle=False)
-        imsave(file_path, (self.image - np.min(self.image))/(np.max(self.image) - np.min(self.image)))
+        file_path = os.path.join(os.path.join(self.dst, "images"), "img_" + str(self.image_id) + ".npy")
+        np.save(file_path, self.image, allow_pickle=False)
+        #imsave(file_path, (self.image - np.min(self.image))/(np.max(self.image) - np.min(self.image)))
 
     def _filter_control_points(self):
         '''
@@ -155,7 +112,6 @@ class TransformRaw:
         reconstructed by a bspline with tolerably small error.
         These points will be the target of the model.
         '''
-
         def control_points(side):
             controls = []
             
