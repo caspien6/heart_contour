@@ -9,46 +9,62 @@ import os
 import torch
 import torch.nn as nn
 from autoencoder import Autoencoder
+from roinn import RoiNN
 
-
-class Flatten(nn.Module):
-    def forward(self, input):
-        return input.view(input.size(0), -1)
 
 class RoiLearn:
     def __init__(self):
         torch.manual_seed(23)
-        self.conv1 = nn.Conv2d(1,100, (11,11))
+        '''self.conv1 = nn.Conv2d(1,100, (11,11))
         self.softmax = nn.Softmax()
         self.sigmoid = nn.Sigmoid()
         self.avgpool = nn.AvgPool2d(6)
         self.flatten = Flatten()
-        self.full = nn.Linear(8100,1024)
+        self.full = nn.Linear(8100,1024)'''
         #self.encoder = nn.Linear(121,100)
         #self.decoder = nn.Linear(100,121)
           
     # Autoencoder architecture
     def build_ae(self):
-        self.autoencoder = Autoencoder(121,100)
+        self.autoencoder = Autoencoder(121,100).to('cuda')
         self.autoencoder = self.autoencoder.double()
+        
+    def save_ae_weights(self,path):
+        torch.save(self.autoencoder.state_dict(), path)
+
+    def load_ae_weights(self,path):
+        self.build_ae()
+        self.autoencoder.load_state_dict(torch.load(path))
+
+    def build_model(self):
+        self.model = RoiNN().to('cuda')
+        self.model = self.model.double()
+        
+    def save_model_weights(self,path):
+        torch.save(self.model.state_dict(), path)
+
+    def load_model_weights(self,path):
+        self.build_ae()
+        self.model.load_state_dict(torch.load(path))
         
     # Autoencoder W2 and b2 to the original model conv1 layer features and biases.
     # From the parameters list - index 0 is the weights
     #                          - index 1 is the biases
     def ae_weights2model_feature_set(self):
         
-        w2 = list(self.encoder.parameters())
+        w2 = self.autoencoder.encoder.weight.cpu().detach().numpy()
+        b2 = self.autoencoder.encoder.bias.cpu().detach().numpy()
         
-        b2 = w2[1].detach().numpy()
         # weights shape here (100,121)
-        w2 = np.expand_dims(w2[0].detach().numpy().reshape((100,11,11)), axis = 1)
+        w2 = np.expand_dims(w2.reshape((100,11,11)), axis = 1)
         # weights shape (100,1,11,11)
-        
-        conv1_features = list(self.conv1.parameters())
-        conv1_features[0] = torch.nn.Parameter(torch.from_numpy(w2))
-        conv1_features[1] = torch.nn.Parameter(torch.from_numpy(b2))
-        conv1_features[0].requires_grad=False
-        conv1_features[1].requires_grad=False
+
+
+        self.model.conv1.weight = torch.nn.Parameter(torch.from_numpy(w2))
+        self.model.conv1.bias = torch.nn.Parameter(torch.from_numpy(b2))
+        self.model.conv1 = self.model.conv1.cuda()
+        self.model.conv1.weight.requires_grad=False
+        self.model.conv1.bias.requires_grad=False
         
     
     def normalize_range(self, vector):
@@ -73,7 +89,7 @@ class RoiLearn:
     '''     
     def learn_ae(self, dataset_loader, optimizer,criterion, ep = 1, lr = 0.01, BETA = 3, RHO = 0.1):
         
-        rho = torch.tensor([RHO for _ in range(self.autoencoder.n_hidden)]).double()
+        rho = torch.tensor([RHO for _ in range(self.autoencoder.n_hidden)]).double().cuda()
         crit2 = nn.KLDivLoss(size_average=False)
         for epoch in range(ep):
             for i_batch, sample_batched in enumerate(dataset_loader):
@@ -91,26 +107,17 @@ class RoiLearn:
                 loss.backward()
                 optimizer.step()
             print('epoch: ', epoch,' loss: ', loss.item())
-        
+                 
+
+    def learn_roi(self, dataset_loader, optimizer,criterion, ep = 1):
+        for epoch in range(ep):
+            for i_batch, sample_batched in enumerate(dataset_loader):
+                # Forward
+                out = self.model(sample_batched['image'])
+                # Loss
+                loss = criterion(sample_batched['mask'], out)
                 
-    
-    def build_model(self):
-        self.model = nn.Sequential(self.conv1,
-                            self.avgpool,
-                            self.softmax,
-                            self.flatten,
-                            self.full,
-                            self.softmax
-                            )
-        self.model = self.model.double()
-    
-    def propagate_from_dataLoader(self,dl):
-        for i_batch, sample_batched in enumerate(dl):
-            print(self.model(sample_batched[0]))
-        
-    def propagate(self):
-        return self.model(self.x)
-    
-    def save_image( self,npdata, outfilename ) :
-        img = Image.fromarray( np.asarray( np.clip(npdata,0,255), dtype="uint8"), "L" )
-        img.save( outfilename )
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+            print('epoch: ', epoch,' loss: ', loss.item())

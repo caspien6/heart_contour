@@ -13,7 +13,7 @@ import pydicom as dicom
 class RoiDataset(Dataset):
     """Roi dataset."""
 
-    def __init__(self, csv_file, transform=None, target_transform=None):
+    def __init__(self, csv_file, transform=None, target_transform=None, smpl = 0):
         """
         Args:
             csv_file (string): Path to the csv file with contour data.
@@ -22,7 +22,9 @@ class RoiDataset(Dataset):
         """
         'height is  (y length) width is  (x length)'
         self.contour_data = pd.read_csv(csv_file,sep=';', names=('path','slice', 'frame', 'xmin', 'ymin', 'height','width' ))
-        self.contour_data = self.contour_data.sample(200)
+        if smpl != 0:
+            self.contour_data = self.contour_data.sample(smpl)
+
         self.dcm_images = {}
         for path in self.contour_data['path']:
             temp_ds = dicom.dcmread(path)
@@ -48,9 +50,9 @@ class RoiDataset(Dataset):
         sample = {'image': image, 'mask': mask}
 
         if self.transform:
-            sample['image'] = self.transform(sample['image'])
+            sample['image'] = self.transform(sample['image']).cuda()
         if self.target_transform:
-            sample['mask'] = self.target_transform(sample['mask'])
+            sample['mask'] = self.target_transform(sample['mask']).cuda()
 
         return sample
         

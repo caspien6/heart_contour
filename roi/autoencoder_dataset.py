@@ -31,7 +31,7 @@ class AEDataset(Dataset):
             temp_ds = dicom.dcmread(path)
             img = randomPatcher.__call__(temp_ds.pixel_array)
             self.dcm_images.append(img)
-            
+        
         self.transform = transform
         self.target_transform = target_transform
         
@@ -47,9 +47,9 @@ class AEDataset(Dataset):
         sample = {'image': image}
 
         if self.transform:
-            sample['image'] = self.transform(sample['image'])
+            sample['image'] = self.transform(sample['image']).cuda()
         if self.target_transform:
-            sample['mask'] = self.target_transform(sample['mask'])
+            sample['mask'] = self.target_transform(sample['mask']).cuda()
 
         return sample
         
