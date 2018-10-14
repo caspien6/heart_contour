@@ -44,7 +44,7 @@ class RoiLearn:
         torch.save(self.model.state_dict(), path)
 
     def load_model_weights(self,path):
-        self.build_ae()
+        self.build_model()
         self.model.load_state_dict(torch.load(path))
         
     # Autoencoder W2 and b2 to the original model conv1 layer features and biases.
