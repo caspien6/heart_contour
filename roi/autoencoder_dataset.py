@@ -48,8 +48,6 @@ class AEDataset(Dataset):
 
         if self.transform:
             sample['image'] = self.transform(sample['image']).cuda()
-        if self.target_transform:
-            sample['mask'] = self.target_transform(sample['mask']).cuda()
 
         return sample
         

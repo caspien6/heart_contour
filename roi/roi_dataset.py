@@ -44,15 +44,18 @@ class RoiDataset(Dataset):
         fr = int(cont['frame'])
         
         mask = np.zeros((224,224))
+        inner_border = 10
         mask[ int(cont['ymin']): int(cont['ymin']) + int(cont['height']),int(cont['xmin']): int(cont['xmin']) + int(cont['width'])] = 1
         image = self.dcm_images[str(cont['path'])]
         
-        sample = {'image': image, 'mask': mask}
+        sample = {'image': image, 'mask': mask, 'mask_center': {'x': int(cont['xmin']) + int(cont['width'] / 2), 'y': int(cont['ymin']) + int(cont['height'] / 2)}}
 
         if self.transform:
             sample['image'] = self.transform(sample['image']).cuda()
         if self.target_transform:
             sample['mask'] = self.target_transform(sample['mask']).cuda()
+        #sample['mask_center']['x'] = torch.Tensor(sample['mask_center']['x']).cuda()
+        #sample['mask_center']['y'] = torch.Tensor(sample['mask_center']['y']).cuda()
 
         return sample
         
