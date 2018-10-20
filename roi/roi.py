@@ -154,6 +154,7 @@ class RoiLearn:
     
     def save_model_plots(self, filename=None):
         '''Save model plots'''
+        plt.ioff()
         plt.plot(range(1,len(self.model_train_losses)+1),self.model_train_losses, label="train")
         plt.plot(range(1,len(self.model_valid_losses)+1),self.model_valid_losses, label="validation")
         plt.plot(range(1,len(self.model_test_losses)+1),self.model_test_losses, label="test")
@@ -182,6 +183,7 @@ class RoiLearn:
         Z = self.model_valid_losses[:epochs:step]
         E = self.model_test_losses[:epochs:step]
         df = pd.DataFrame(np.c_[Y,Z,E], index=X, columns=['train','valid', 'test'])
+        
         df.plot.bar()
         plt.title('Test losses')
         plt.show()
@@ -194,6 +196,7 @@ class RoiLearn:
         E = self.model_test_losses[:epochs:step]
         
         df = pd.DataFrame(np.c_[Y,Z,E], index=X, columns=['train','valid', 'test'])
+        plt.ioff()
         df.plot.bar()
         plt.title('Test losses')
         plt.savefig(filename)

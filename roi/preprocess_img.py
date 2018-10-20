@@ -9,11 +9,11 @@ import glob
 def write_all_rectangle2file(rootdir):
     rectangle_file = rootdir + 'rectangle.csv'
     for subdir, dirs, files in os.walk(rootdir):
-        dcm_folder = glob.glob(subdir + './*.dcm')
-        if len(dcm_folder) != 0 and len(glob.glob(subdir.rsplit('\\', 1)[0] + '/*.con')) != 0:
+        dcm_folder = glob.glob(subdir + '/*.dcm')
+        if len(dcm_folder) != 0 and len(glob.glob(subdir.rsplit('/', 1)[0] + '/*.con')) != 0:
             dcm_folder = subdir 
-            con_file = glob.glob(dcm_folder.rsplit('\\', 1)[0] + '/*.con')[0]
-            write_rectangle2file(dcm_folder+ '\\', con_file, rectangle_file)
+            con_file = glob.glob(dcm_folder.rsplit('/', 1)[0] + '/*.con')[0]
+            write_rectangle2file(dcm_folder+ '/', con_file, rectangle_file)
         
 
 #Write embracing rectangle info into a rectang.csv file
@@ -26,10 +26,14 @@ def write_rectangle2file(dcm_folder, con_file, rectangle_file):
     print("Dicom files were read in!")
     cn = con_reader.CONreader(con_file)
     print("Con files were read in!")
+    
+    #print(cn.container)
 
     hierarchical = cn.get_hierarchical_contours()
-        
+    print(hierarchical.keys())
+
     for slice in hierarchical.keys():
+        print(hierarchical[slice].keys())        
         for frame in hierarchical[slice].keys():
 
             img = dc.get_image(slice, frame)
