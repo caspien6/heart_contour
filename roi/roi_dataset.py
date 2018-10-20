@@ -54,8 +54,6 @@ class RoiDataset(Dataset):
             sample['image'] = self.transform(sample['image']).cuda()
         if self.target_transform:
             sample['mask'] = self.target_transform(sample['mask']).cuda()
-        #sample['mask_center']['x'] = torch.Tensor(sample['mask_center']['x']).cuda()
-        #sample['mask_center']['y'] = torch.Tensor(sample['mask_center']['y']).cuda()
 
         return sample
         

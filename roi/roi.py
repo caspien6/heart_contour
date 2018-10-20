@@ -11,9 +11,12 @@ import torch.nn as nn
 from autoencoder import Autoencoder
 from roinn import RoiNN
 import matplotlib.pyplot as plt
+import pandas as pd
+import cv2
+import math
 
 
-def dice_loss(input, target):
+def dice_loss(target, input):
     smooth = 1.
 
     iflat = input.view(-1)
@@ -30,14 +33,29 @@ def center_distance_loss(target_center, input):
     
     #Original picture resize
     reshaped_output = m(reshaped_output)
-    #plt.imshow(reshaped_output.view(-1,224,224)[0].cpu().detach().numpy(),cmap=plt.cm.bone)
+    reshaped_output = reshaped_output.cpu().detach().numpy()
+
+    y_indexes, x_indexes = np.zeros((reshaped_output.shape[0])), np.zeros((reshaped_output.shape[0]))
     
-    val,x_indexes = torch.max(reshaped_output,3)
+    for i in range(reshaped_output.shape[0]):
+        opencv_mask = np.around(reshaped_output[i,0])*255
+        opencv_mask = opencv_mask.astype(np.uint8)
+        #opencv_mask = opencv_mask.long()
+
+        rect = cv2.boundingRect(opencv_mask)
+        x,y,w,h = rect
+        x_indexes[i] = int(x + (w)/2)
+        y_indexes[i] = int(y + (h)/2)
+        
+    
+    '''val,x_indexes = torch.max(reshaped_output,3)
     val2,y_indexes_by_batch = torch.max(val,2)
     x_indexes_by_batch = torch.gather(x_indexes,2, y_indexes_by_batch.view(-1,1,1))
     
     y_es = ((y_indexes_by_batch.float()-target_center['y'].float().cuda())**2).float()
-    x_es = ((x_indexes_by_batch.float()-target_center['x'].float().cuda())**2).float()
+    x_es = ((x_indexes_by_batch.float()-target_center['x'].float().cuda())**2).float()'''
+    y_es = ((y_indexes-target_center['y'])**2)
+    x_es = ((x_indexes-target_center['x'])**2)
     
     return torch.mean(torch.sqrt( y_es+ x_es))
 
@@ -158,22 +176,23 @@ class RoiLearn:
         plt.savefig(filename.rsplit('.',1)[0] + '_center_' + filename.rsplit('.',1)[1])
     
     def plot_model_test_losses(self,epochs, columns_number = 5):
-        X = [x for x in range(1,epochs+1,int(epochs/columns_number))]
-        Y = self.model_train_losses[:epochs:int(epochs/columns_number)]
-        Z = self.model_valid_losses[:epochs:int(epochs/columns_number)]
-        E = self.model_test_losses[:epochs:int(epochs/columns_number)]
+        step = int(math.ceil(epochs/columns_number))
+        X = [x for x in range(1,epochs+1,step)]
+        Y = self.model_train_losses[:epochs:step]
+        Z = self.model_valid_losses[:epochs:step]
+        E = self.model_test_losses[:epochs:step]
         df = pd.DataFrame(np.c_[Y,Z,E], index=X, columns=['train','valid', 'test'])
         df.plot.bar()
         plt.title('Test losses')
         plt.show()
         
     def save_model_test_losses(self, filename, epochs, columns_number = 5):
-        X = [x for x in range(1,epochs+1,int(epochs/columns_number))]
-        Y = self.model_train_losses[:epochs:int(epochs/columns_number)]
-        Z = self.model_valid_losses[:epochs:int(epochs/columns_number)]
-        E = self.model_test_losses[:epochs:int(epochs/columns_number)]
-        print(len(Y))
-        print(len(E))
+        step = int(math.ceil(epochs/columns_number))
+        X = [x for x in range(1,epochs+1,step)]
+        Y = self.model_train_losses[:epochs:step]
+        Z = self.model_valid_losses[:epochs:step]
+        E = self.model_test_losses[:epochs:step]
+        
         df = pd.DataFrame(np.c_[Y,Z,E], index=X, columns=['train','valid', 'test'])
         df.plot.bar()
         plt.title('Test losses')
@@ -244,7 +263,7 @@ class RoiLearn:
                     self.save_ae_weights(weight_path)
                 
 
-    def test_roi(self, loader_test):        
+    def test_roi(self, loader_test, criterion, optimizer):        
         self.model.eval()
         
         epoch_loss = 0
@@ -265,15 +284,16 @@ class RoiLearn:
                     
             optimizer.zero_grad()
             
-            self.model_test_losses.append(epoch_loss / float(batch_counter))
-            self.model_test_dice_losses.append(dc_loss / float(batch_counter))
-            self.model_test_center_losses.append(center_dist_loss / float(batch_counter))
+        self.model_test_losses.append(epoch_loss / float(batch_counter))
+        self.model_test_dice_losses.append(dc_loss / float(batch_counter))
+        self.model_test_center_losses.append(center_dist_loss / float(batch_counter))
         print('Test results =>  test_loss: ', self.model_test_losses[-1], ' test_dice_loss: ', self.model_test_dice_losses[-1])
         print('test_center_average_loss: ', self.model_test_center_losses[-1].item(), '\n')
     
                 
     def learn_roi(self, dataset_loader, optimizer,criterion, ep = 1, dataset_validation = None,
-                weight_path = None, TEST_COUNT=10, dataset_test = None, earlystop_info = None, save_weight_step = 20):
+                weight_path = None, TEST_COUNT=10, dataset_test = None, earlystop_info = None, save_weight_step = 20,
+                 plot_filename = 'roi_plot.png', plot_test_filename = 'roi_test_losses'):
         self.model_train_losses=[]
         self.model_valid_losses = []
         self.model_train_dice_losses=[]
@@ -331,11 +351,11 @@ class RoiLearn:
                     self.model_valid_center_losses.append(center_dist_loss / float(batch_counter))
                     
             if dataset_test != None and epoch % int(ep/TEST_COUNT) == 0:
-                self.test_roi(dataset_test)
+                self.test_roi(dataset_test, criterion, optimizer)
             elif dataset_test != None:
-                self.model_test_losses.insert(-1, self.model_test_losses[-1])
-                self.model_test_dice_losses.insert(-1,self.model_test_dice_losses[-1])
-                self.model_test_center_losses.insert(-1,self.model_test_center_losses[-1])
+                self.model_test_losses.append(self.model_test_losses[-1])
+                self.model_test_dice_losses.append(self.model_test_dice_losses[-1])
+                self.model_test_center_losses.append(self.model_test_center_losses[-1])
                 
             if epoch % 5 == 0:
                 print('epoch: ', epoch,' train_loss: ', self.model_train_losses[-1], ' valid_loss: ', self.model_valid_losses[-1])
@@ -345,18 +365,20 @@ class RoiLearn:
             '''Early stopping section'''
             if (earlystop_info != None and epoch > 2 and earlystop_info['step'] > (self.model_valid_losses[-2] - self.model_valid_losses[-1]) ):
                 earlystop_counter += 1   
-            elif (earlystop_info != None):
+            elif (earlystop_info != None and epoch > 2 and earlystop_info['step'] <= (self.model_valid_losses[-2] - self.model_valid_losses[-1])):
                 earlystop_counter = 0
                 
-            if epoch % save_weight_step == 0 and weight_path != None:
+            if epoch % save_weight_step == 0 and epoch > 3 and weight_path != None and 0 < (self.model_valid_losses[-2] - self.model_valid_losses[-1]) :
                 self.save_model_weights(weight_path)
             
             if earlystop_info != None and earlystop_info['patience_steps'] <= earlystop_counter:
                 print('Early stopping!\n Epoch: ', epoch)
                 self.save_model_weights(weight_path)
-                self.save_model_plots('roi_plot.png')
-                self.save_model_test_losses('roi_test_losses.png', epoch+1, TEST_COUNT)
+                self.save_model_plots(plot_filename)
+                self.save_model_test_losses(plot_test_filename, epoch+1, TEST_COUNT)
                 return
-                    
+
+        self.save_model_weights(weight_path)
         if (dataset_test != None):
-            self.save_model_test_losses('mode_test_barchart.png', ep, TEST_COUNT)
+            self.save_model_test_losses(plot_test_filename, ep, TEST_COUNT)
+        self.save_model_plots(plot_filename)

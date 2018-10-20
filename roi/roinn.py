@@ -18,6 +18,6 @@ class RoiNN(nn.Module):
         self.full = nn.Linear(8100,1024)
 
     def forward(self, x):
-        convolved = F.softmax(self.avgpool(self.conv1(x)))
-        out = F.softmax(self.full(self.flatten(convolved)))
+        convolved = self.avgpool(self.conv1(x))
+        out = F.sigmoid(self.full(self.flatten(convolved)))
         return out
